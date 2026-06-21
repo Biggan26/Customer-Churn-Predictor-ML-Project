@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
+import os
 
 # ১. পেজ কনফিগারেশন
 st.set_page_config(
@@ -31,19 +32,24 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# ৩. মডেল এবং স্কেলার লোড করা
+# ৩. মডেল এবং স্কেলার লোড করা (পাথ ডাইনামিক করা হয়েছে যাতে ক্লাউডে এরর না আসে)
 @st.cache_resource
 def load_artifacts():
-    model = joblib.load("churn_model.pkl")
-    scaler = joblib.load("scaler.pkl")
+    # কারেন্ট ফাইলের ডিরেক্টরি অনুযায়ী পাথ নির্ধারণ করা (লোকাল ও ক্লাউড দুই জায়গাতেই কাজ করবে)
+    current_dir = os.path.dirname(__file__)
+    model_path = os.path.join(current_dir, "churn_model.pkl")
+    scaler_path = os.path.join(current_dir, "scaler.pkl")
+    
+    model = joblib.load(model_path)
+    scaler = joblib.load(scaler_path)
     return model, scaler
 
 try:
     model, scaler = load_artifacts()
 except Exception as e:
-    st.error(f"Error loading artifacts: {e}. Please ensure 'churn_model.pkl' and 'scaler.pkl' are in the same folder.")
+    st.error(f"Error loading artifacts: {e}. Please ensure 'churn_model.pkl' and 'scaler.pkl' are in the correct app directory.")
 
-# ৪. সাইডবার এবং মেইন স্ক্রিনে ইনপুট ডিস্ট্রিবিউশন (২১টি ফিচারের সব)
+# ৪. সাইডবার এবং মেইন স্ক্রিনে ইনপুট ডিস্ট্রিবিউশন
 st.sidebar.header("🎯 Demographics & Contract")
 st.sidebar.write("Set core account attributes:")
 
@@ -58,14 +64,12 @@ payment_method = st.sidebar.selectbox("Payment Method", [
     "Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"
 ])
 
-# মেইন স্ক্রিন ডিজাইন
 st.title("📊 Telco Customer Churn Predictor")
 st.subheader("Enterprise AI Solution with Comprehensive Feature Profile Input")
 
 st.markdown("### 🛠️ Telecom Services Subscription Profile")
 st.write("Configure the technical services activated for this customer profile:")
 
-# ৩টি কলামে কাস্টমারের সার্ভিস ইনপুটগুলো ভাগ করা হলো যাতে হিজিবিজি না লাগে
 col_srv1, col_srv2, col_srv3 = st.columns(3)
 
 with col_srv1:
@@ -92,69 +96,45 @@ with col_fin2:
 
 st.markdown("---")
 
-# ৫. গাণিতিক লজিক (X_train.columns এর এনকোডেড ২৯টি কলামের ম্যাপিং)
+# ৫. গাণিতিক লজিক এবং ওয়ান-হট এনকোডিং ম্যাপিং
 if st.button("Run Comprehensive Risk Assessment"):
     
-    # ইউজারের দেওয়া সমস্ত ইনপুটকে গিটহাবে আপনার মডেল ডামি কলামের সাথে হুবহু মিলানো
     input_data = {
         'SeniorCitizen': 1 if senior_citizen == "Yes" else 0,
         'tenure': tenure,
         'MonthlyCharges': monthly_charges,
         'TotalCharges': float(tenure * monthly_charges),
-        
-        # Gender
         'gender_Male': 1 if gender == "Male" else 0,
-        
-        # Demographics
         'Partner_Yes': 1 if partner == "Yes" else 0,
         'Dependents_Yes': 1 if dependents == "Yes" else 0,
-        
-        # Phone Services
         'PhoneService_Yes': 1 if phone_service == "Yes" else 0,
         'MultipleLines_No phone service': 1 if multiple_lines == "No phone service" else 0,
         'MultipleLines_Yes': 1 if multiple_lines == "Yes" else 0,
-        
-        # Internet Services
         'InternetService_Fiber optic': 1 if internet_service == "Fiber optic" else 0,
         'InternetService_No': 1 if internet_service == "No" else 0,
-        
-        # Account Add-ons
         'OnlineSecurity_No internet service': 1 if online_security == "No internet service" else 0,
         'OnlineSecurity_Yes': 1 if online_security == "Yes" else 0,
-        
         'OnlineBackup_No internet service': 1 if online_backup == "No internet service" else 0,
         'OnlineBackup_Yes': 1 if online_backup == "Yes" else 0,
-        
         'DeviceProtection_No internet service': 1 if device_protection == "No internet service" else 0,
         'DeviceProtection_Yes': 1 if device_protection == "Yes" else 0,
-        
         'TechSupport_No internet service': 1 if tech_support == "No internet service" else 0,
         'TechSupport_Yes': 1 if tech_support == "Yes" else 0,
-        
         'StreamingTV_No internet service': 1 if streaming_tv == "No internet service" else 0,
         'StreamingTV_Yes': 1 if streaming_tv == "Yes" else 0,
-        
         'StreamingMovies_No internet service': 1 if streaming_movies == "No internet service" else 0,
         'StreamingMovies_Yes': 1 if streaming_movies == "Yes" else 0,
-        
-        # Contracts
         'Contract_One year': 1 if contract == "One year" else 0,
         'Contract_Two year': 1 if contract == "Two year" else 0,
-        
-        # Billing & Payments
         'PaperlessBilling_Yes': 1 if paperless_billing == "Yes" else 0,
         'PaymentMethod_Credit card (automatic)': 1 if payment_method == "Credit card (automatic)" else 0,
         'PaymentMethod_Electronic check': 1 if payment_method == "Electronic check" else 0,
         'PaymentMethod_Mailed check': 1 if payment_method == "Mailed check" else 0
     }
     
-    # পান্ডাস ডেটাফ্রেমে রূপান্তর
     input_df = pd.DataFrame([input_data])
-    
-    # স্কেলার ফিটনেস ট্রান্সফর্মেশন
     input_scaled = scaler.transform(input_df)
     
-    # মডেল ইনফারেন্সিং
     prediction = model.predict(input_scaled)[0]
     probability = model.predict_proba(input_scaled)[0][1]
     
@@ -175,7 +155,7 @@ if st.button("Run Comprehensive Risk Assessment"):
             🎉 <strong>Loyal Profile Verified:</strong> This customer is predicted to <strong>STAY</strong> active with the service.<br>
             <strong>Retention Confidence:</strong> {(1 - probability) * 100:.2f}%
         </div>
-        """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True) # এখানে unsafe_allow_html ফিক্স করা হয়েছে
         st.info("Strategy Recommendation: Standard automated nurturing. Eligible for premium value-added services cross-selling.")
 else:
     st.info("💡 Instructions: Adjust the demographic controls on the sidebar and service checkboxes on the dashboard, then click 'Run Comprehensive Risk Assessment'.")
