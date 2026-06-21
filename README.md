@@ -5,9 +5,9 @@ An end-to-end Machine Learning web application designed to predict telecom custo
 ## 🚀 Live Demo
 https://churn-predictor-biggan.streamlit.app
 
-![alt text](reports\image.png)
+![alt text](reports/image.png)
 
-![alt text](reports\image1.png)
+![alt text](reports/image1.png)
 ## 📁 Project Structure
 ```text
 Customer_Churn_Project/
