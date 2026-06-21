@@ -1,0 +1,29 @@
+# Virtual Environment (আপনার পিসির লোকাল লাইব্রেরিগুলো ইগনোর করবে)
+.venv/
+venv/
+ENV/
+pyvenv.cfg
+
+# Python compiles & caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Distribution / Build (ডিস্ট্রিবিউশন ফোল্ডার ইগনোর করবে)
+.dist/
+dist/
+build/
+*.egg-info/
+
+# OS specific files (উইন্ডোজের ফালতু ক্যাশ ফাইল)
+.DS_Store
+Thumbs.db
+
+.env
+__pycache__/
+*.pyc
+.env
+.dist/
+
