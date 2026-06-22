@@ -47,3 +47,18 @@ During development, multiple models were evaluated on the test set. **Logistic R
    cd app
    streamlit run app.py
    ```
+
+
+
+Extra Details:
+🎯 🎯  Customer Churn Predictor
+🔗 Project Deliverables & Links:
+
+🌐 Live Streamlit Web App: https://churn-predictor-biggan.streamlit.app/
+💻 Source Code & Repository (GitHub): https://github.com/Biggan26/Customer-Churn-Predictor-ML-Project
+📓 Development Notebook (Kaggle):https://www.kaggle.com/code/gmbiggan/churn-analysis
+
+Note for myself: 
+Streamlit amar office er id theke host kora, 
+
+
